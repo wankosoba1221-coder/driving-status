@@ -4,9 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>いま</title>
+<title>運転状況</title>
 
-<!-- ★可愛いフォント（M PLUS Rounded 1c）の読み込み -->
+<!-- 可愛いフォント（M PLUS Rounded 1c）の読み込み -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap" rel="stylesheet">
@@ -14,9 +14,8 @@
 <style>
 body {
   margin: 0;
-  background: #1a1a24; /* ちょっと柔らかいダークカラー */
+  background: #1a1a24;
   color: white;
-  /* ★フォントを適用 */
   font-family: 'M PLUS Rounded 1c', sans-serif;
   text-align: center;
 }
@@ -35,7 +34,7 @@ h2 {
 
 #status {
   font-size: 44px;
-  font-weight: 800; /* 太文字にしてぷっくり感UP */
+  font-weight: 800;
   margin: 40px 0 15px;
   text-shadow: 0 4px 12px rgba(0,0,0,0.3);
 }
@@ -67,9 +66,6 @@ h2 {
 const SUPABASE_URL = "https://pgxnkytfkhpyxyvltwlr.supabase.co";
 const SUPABASE_KEY = "sb_publishable_Pcv1LgyrlbZ5036zwmM3KQ_6aIUtnac";
 
-// ★自分だけのパスコード（URLで変更する時用）
-const SECRET_PASSCODE = "1234";
-
 const db = supabase.createClient(
   SUPABASE_URL,
   SUPABASE_KEY
@@ -89,9 +85,9 @@ async function loadStatus() {
   }
 
   if (data.driving) {
-    document.getElementById("status").textContent = "🚗 運転中";
+    document.getElementById("status").textContent = "運転中";
   } else {
-    document.getElementById("status").textContent = "🏠 ひま";
+    document.getElementById("status").textContent = "ひま";
   }
 
   document.getElementById("time").textContent =
@@ -118,20 +114,18 @@ async function setDriving(value) {
 }
 
 
-// --- URLパラメータ ?toggle=1&pass=1234 で自動切替 ---
+// --- URLに ?toggle=1 または ?toggle/1 がある時にトグル切替 ---
 async function initToggle() {
   const urlParams = new URLSearchParams(window.location.search);
-  
-  if (urlParams.has('toggle')) {
-    const pass = urlParams.get('pass');
+  const hasToggle = urlParams.has('toggle') || window.location.search.includes('toggle');
+
+  if (hasToggle) {
+    const { data, error } = await db.from("status").select("driving").eq("id", 1).single();
     
-    if (pass === SECRET_PASSCODE) {
-      const { data, error } = await db.from("status").select("driving").eq("id", 1).single();
-      
-      if (!error && data) {
-        await setDriving(!data.driving);
-        window.history.replaceState({}, document.title, window.location.pathname);
-      }
+    if (!error && data) {
+      await setDriving(!data.driving);
+      // URLから ?toggle を消してリロードでの連続発動を防止
+      window.history.replaceState({}, document.title, window.location.pathname);
     }
   }
 }

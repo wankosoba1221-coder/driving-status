@@ -78,7 +78,6 @@ button {
 <script>
 
 const SUPABASE_URL = "https://pgxnkytfkhpyxyvltwlr.supabase.co";
-
 const SUPABASE_KEY = "sb_publishable_Pcv1LgyrlbZ5036zwmM3KQ_6aIUtnac";
 
 const db = supabase.createClient(
@@ -88,7 +87,6 @@ const db = supabase.createClient(
 
 
 async function loadStatus() {
-
   const { data, error } = await db
     .from("status")
     .select("*")
@@ -96,32 +94,24 @@ async function loadStatus() {
     .single();
 
   if (error) {
-    document.getElementById("status").textContent =
-      "エラー";
-    return;
+    document.getElementById("status").textContent = "エラー";
+    return null;
   }
 
   if (data.driving) {
-
-    document.getElementById("status").textContent =
-      "運転中";
-
+    document.getElementById("status").textContent = "運転中";
   } else {
-
-    document.getElementById("status").textContent =
-      "ひま";
-
+    document.getElementById("status").textContent = "ひま";
   }
 
   document.getElementById("time").textContent =
-    "最終更新: " +
-    new Date(data.updated_at)
-      .toLocaleString("ja-JP");
+    "最終更新: " + new Date(data.updated_at).toLocaleString("ja-JP");
+  
+  return data; // 状態を返すように変更
 }
 
 
 async function setDriving(value) {
-
   const { error } = await db
     .from("status")
     .update({
@@ -131,18 +121,34 @@ async function setDriving(value) {
     .eq("id", 1);
 
   if (error) {
-
     alert("変更に失敗しました");
     return;
-
   }
-
   loadStatus();
 }
 
+// --- 【追加】URLパラメータ ?toggle=1 で自動切替する関数 ---
+async function initToggle() {
+  const urlParams = new URLSearchParams(window.location.search);
+  
+  // ?toggle=1 があるかチェック
+  if (urlParams.has('toggle')) {
+    // 現在の状態を取得
+    const { data, error } = await db.from("status").select("driving").eq("id", 1).single();
+    
+    if (!error && data) {
+      // 現在の逆の状態（反転）にする
+      await setDriving(!data.driving);
+      
+      // URLから ?toggle=1 を消してクリーンにする
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }
+}
 
+// 実行開始
 loadStatus();
-
+initToggle(); // URLパラメータ判定を実行
 setInterval(loadStatus, 3000);
 
 </script>

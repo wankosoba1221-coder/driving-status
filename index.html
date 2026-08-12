@@ -4,14 +4,20 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>運転状況</title>
+<title>いま</title>
+
+<!-- ★可愛いフォント（M PLUS Rounded 1c）の読み込み -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap" rel="stylesheet">
 
 <style>
 body {
   margin: 0;
-  background: #111;
+  background: #1a1a24; /* ちょっと柔らかいダークカラー */
   color: white;
-  font-family: sans-serif;
+  /* ★フォントを適用 */
+  font-family: 'M PLUS Rounded 1c', sans-serif;
   text-align: center;
 }
 
@@ -21,34 +27,23 @@ body {
   padding: 40px 20px;
 }
 
+h2 {
+  font-size: 20px;
+  color: #bbb;
+  letter-spacing: 2px;
+}
+
 #status {
-  font-size: 42px;
-  font-weight: bold;
-  margin: 50px 0 15px;
+  font-size: 44px;
+  font-weight: 800; /* 太文字にしてぷっくり感UP */
+  margin: 40px 0 15px;
+  text-shadow: 0 4px 12px rgba(0,0,0,0.3);
 }
 
 #time {
-  color: #aaa;
+  color: #888;
+  font-size: 14px;
   margin-bottom: 30px;
-}
-
-button {
-  width: 100%;
-  padding: 18px;
-  margin: 8px 0;
-  border: none;
-  border-radius: 15px;
-  font-size: 18px;
-}
-
-.drive {
-  background: #e53935;
-  color: white;
-}
-
-.stop {
-  background: #444;
-  color: white;
 }
 </style>
 </head>
@@ -63,8 +58,6 @@ button {
 
 <div id="time"></div>
 
-
-
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -73,6 +66,9 @@ button {
 
 const SUPABASE_URL = "https://pgxnkytfkhpyxyvltwlr.supabase.co";
 const SUPABASE_KEY = "sb_publishable_Pcv1LgyrlbZ5036zwmM3KQ_6aIUtnac";
+
+// ★自分だけのパスコード（URLで変更する時用）
+const SECRET_PASSCODE = "1234";
 
 const db = supabase.createClient(
   SUPABASE_URL,
@@ -93,15 +89,15 @@ async function loadStatus() {
   }
 
   if (data.driving) {
-    document.getElementById("status").textContent = "運転中";
+    document.getElementById("status").textContent = "🚗 運転中";
   } else {
-    document.getElementById("status").textContent = "ひま";
+    document.getElementById("status").textContent = "🏠 ひま";
   }
 
   document.getElementById("time").textContent =
     "最終更新: " + new Date(data.updated_at).toLocaleString("ja-JP");
   
-  return data; // 状態を返すように変更
+  return data;
 }
 
 
@@ -121,28 +117,27 @@ async function setDriving(value) {
   loadStatus();
 }
 
-// --- 【追加】URLパラメータ ?toggle=1 で自動切替する関数 ---
+
+// --- URLパラメータ ?toggle=1&pass=1234 で自動切替 ---
 async function initToggle() {
   const urlParams = new URLSearchParams(window.location.search);
   
-  // ?toggle=1 があるかチェック
   if (urlParams.has('toggle')) {
-    // 現在の状態を取得
-    const { data, error } = await db.from("status").select("driving").eq("id", 1).single();
+    const pass = urlParams.get('pass');
     
-    if (!error && data) {
-      // 現在の逆の状態（反転）にする
-      await setDriving(!data.driving);
+    if (pass === SECRET_PASSCODE) {
+      const { data, error } = await db.from("status").select("driving").eq("id", 1).single();
       
-      // URLから ?toggle=1 を消してクリーンにする
-      window.history.replaceState({}, document.title, window.location.pathname);
+      if (!error && data) {
+        await setDriving(!data.driving);
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
     }
   }
 }
 
-// 実行開始
 loadStatus();
-initToggle(); // URLパラメータ判定を実行
+initToggle();
 setInterval(loadStatus, 3000);
 
 </script>

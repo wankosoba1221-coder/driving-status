@@ -64,11 +64,11 @@ button {
 <div id="time"></div>
 
 <button class="drive" onclick="setDriving(true)">
-🚗 運転中にする
+運転中にする
 </button>
 
 <button class="stop" onclick="setDriving(false)">
-🏠 運転終了
+運転終了
 </button>
 
 </div>
@@ -77,7 +77,7 @@ button {
 
 <script>
 
-const SUPABASE_URL = "https://pgxnkytfkhpyxyvltwlr.supabase.co/rest/v1/";
+const SUPABASE_URL = "https://pgxnkytfkhpyxyvltwlr.supabase.co";
 
 const SUPABASE_KEY = "sb_publishable_Pcv1LgyrlbZ5036zwmM3KQ_6aIUtnac";
 
@@ -104,12 +104,12 @@ async function loadStatus() {
   if (data.driving) {
 
     document.getElementById("status").textContent =
-      "🚗 運転中";
+      "運転中";
 
   } else {
 
     document.getElementById("status").textContent =
-      "🏠 運転していません";
+      "ひま";
 
   }
 

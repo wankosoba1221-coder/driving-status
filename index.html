@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>運転状況</title>
+
+<style>
+body {
+  margin: 0;
+  background: #111;
+  color: white;
+  font-family: sans-serif;
+  text-align: center;
+}
+
+.container {
+  max-width: 400px;
+  margin: auto;
+  padding: 40px 20px;
+}
+
+#status {
+  font-size: 42px;
+  font-weight: bold;
+  margin: 50px 0 15px;
+}
+
+#time {
+  color: #aaa;
+  margin-bottom: 30px;
+}
+
+button {
+  width: 100%;
+  padding: 18px;
+  margin: 8px 0;
+  border: none;
+  border-radius: 15px;
+  font-size: 18px;
+}
+
+.drive {
+  background: #e53935;
+  color: white;
+}
+
+.stop {
+  background: #444;
+  color: white;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h2>現在の状態</h2>
+
+<div id="status">読み込み中...</div>
+
+<div id="time"></div>
+
+<button class="drive" onclick="setDriving(true)">
+🚗 運転中にする
+</button>
+
+<button class="stop" onclick="setDriving(false)">
+🏠 運転終了
+</button>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script>
+
+const SUPABASE_URL = https://pgxnkytfkhpyxyvltwlr.supabase.co/rest/v1/;
+
+const SUPABASE_KEY = sb_publishable_Pcv1LgyrlbZ5036zwmM3KQ_6aIUtnac;
+
+const db = supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_KEY
+);
+
+
+async function loadStatus() {
+
+  const { data, error } = await db
+    .from("status")
+    .select("*")
+    .eq("id", 1)
+    .single();
+
+  if (error) {
+    document.getElementById("status").textContent =
+      "エラー";
+    return;
+  }
+
+  if (data.driving) {
+
+    document.getElementById("status").textContent =
+      "🚗 運転中";
+
+  } else {
+
+    document.getElementById("status").textContent =
+      "🏠 運転していません";
+
+  }
+
+  document.getElementById("time").textContent =
+    "最終更新: " +
+    new Date(data.updated_at)
+      .toLocaleString("ja-JP");
+}
+
+
+async function setDriving(value) {
+
+  const { error } = await db
+    .from("status")
+    .update({
+      driving: value,
+      updated_at: new Date().toISOString()
+    })
+    .eq("id", 1);
+
+  if (error) {
+
+    alert("変更に失敗しました");
+    return;
+
+  }
+
+  loadStatus();
+}
+
+
+loadStatus();
+
+setInterval(loadStatus, 3000);
+
+</script>
+
+</body>
+</html>
